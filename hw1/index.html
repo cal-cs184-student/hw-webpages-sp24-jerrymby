@@ -25,72 +25,213 @@
 
 <h1 align="middle">CS 184/284A: Computer Graphics and Imaging, Spring 2024</h1>
 <h1 align="middle">Homework 1: Rasterizer</h1>
-<h2 align="middle">YOUR NAME</h2>
+<h2 align="middle">Boyuan Ma</h2>
+<h3 align="middle">https://cal-cs184-student.github.io/hw-webpages-sp24-jerrymby/hw1/index.html</h3>
 
 <br><br>
 
 <div>
 
 <h2 align="middle">Overview</h2>
-<p>Give a high-level overview of what you implemented in this homework Think about what you've built as a whole. Share your thoughts on what interesting things you've learned from completing the homework.</p>
+<p>In this project, I built a rasterizer that can draw colored shapes through definitions of 
+  triangles and source texture images. From analytical functions to descrete square pixels, 
+  there are many tricks to make this translation smooth and beautiful. 
+  The most interesting thing I saw was how super-sampling works as an antialiasing technique. 
+  The results shown in the pixel inspector gave me visually how this idea is realized. </p>
 
 <h2 align="middle">Section I: Rasterization</h2>
 
 <h3 align="middle">Part 1: Rasterizing single-color triangles</h3>
 
-<p>Here is an example 2x2 gridlike structure using an HTML table. Each <b>tr</b> is a row and each <b>td</b> is a column in that row. You might find this useful for framing and showing your result images in an organized fashion.</p>
+<p>
+  To rasterize a triangle, I first find the max and min integar coordinates of the three vertices to locate the bounding box that contains the triangle. 
+  Next, I loop through each point with in that bounding box to determine if that point is inside the triangle. This process is done by three line tests with 
+  each line defined by the triangle vertices in a counter-clockwise fashion. If the vertices of the triangle is not counter-clockwise, which can be determined 
+  by a line test where the line is defined by two vertices and querying the third vertex point, I switch the points to make the vertices to be counter-clockwise.
+  If the test indicates the point is inside the triangle or right on the edge, I fill that point with color. Since I'm looping through the points in the bounding box,
+  it is fairly fast to render small triangles because I don't need to go over the entire frame buffer for every triangle. 
+</p>
 
 <div align="middle">
   <table style="width=100%">
     <tr>
       <td>
-        <img src="images/image1.png" align="middle" width="400px"/>
-        <figcaption align="middle">Caption goes here.</figcaption>
-      </td>
-      <td>
-        <img src="images/image2.png" align="middle" width="400px"/>
-        <figcaption align="middle">Caption goes here.</figcaption>
+        <img src="screenshot_2-21_21-26-57.png" align="middle" width="400px"/>
+        <figcaption align="middle">Rasterize triangles with pixel inspector at the tip of a triangle. </figcaption>
       </td>
     </tr>
-    <br>
+  </table>
+</div>
+
+<h3 align="middle">Part 2: Antialiasing triangles</h3>
+<p>
+  Super-sampling is a way to reduce aliasing artifacts during rasterization. It is an approximation of convolving a 1-pixel box 
+  filter with the shapes and sample at every pixel. We use super-sampling to approximate the average pixel value. The more 
+  super-sampling rate, the better approximation it is to the true average value. Now when we rasterize, which is sampling at 
+  every pixel, we are sampling the box filter blurred image that don't have much high frequencies that are above the Nyquist rate.
+  <br>
+  <br>
+  My way to do super-sampling is to create a seperate frame buffer, called sample buffer in the code, that is an enlarged grid
+  based on the super-sampling rate. For example, if the sample rate is 4, the sample buffer grid is 2 times the width and height 
+  of the frame buffer. The rasterization pipeline is modified to include another loop over the super-sampled points inside the loop 
+  of the bounding box. 
+</p>
+
+<div align="middle">
+  <table style="width=100%">
     <tr>
       <td>
-        <img src="images/image3.png" align="middle" width="400px"/>
-        <figcaption align="middle">Caption goes here.</figcaption>
+        <img src="screenshot_2-21_22-28-8.png" align="middle" width="300px"/>
+        <figcaption align="middle">Super-sample rate 1.</figcaption>
       </td>
       <td>
-        <img src="images/image4.png" align="middle" width="400px"/>
-        <figcaption align="middle">Caption goes here.</figcaption>
+        <img src="screenshot_2-21_22-28-11.png" align="middle" width="300px"/>
+        <figcaption align="middle">Super-sample rate 4.</figcaption>
+      </td>
+      <td>
+        <img src="screenshot_2-21_22-28-13.png" align="middle" width="300px"/>
+        <figcaption align="middle">Super-sample rate 16.</figcaption>
+      </td>
+    </tr>
+  </table>
+</div>
+
+<h3 align="middle">Part 3: Transforms</h3>
+<p>
+  I modified the svg file to add some rotations to the limbs and fixed the distances between each cubes to be more compact with translations. 
+  The resulting cubeman is running towards the right. 
+</p>
+
+<div align="middle">
+  <table style="width=100%">
+    <tr>
+      <td>
+        <img src="screenshot_2-21_22-47-27.png" align="middle" width="400px"/>
+        <figcaption align="middle">Cubeman running. </figcaption>
       </td>
     </tr>
   </table>
 </div>
 
 
-<h3 align="middle">Part 2: Antialiasing triangles</h3>
-
-
-
-<h3 align="middle">Part 3: Transforms</h3>
-
-
-
 <h2 align="middle">Section II: Sampling</h2>
 
 <h3 align="middle">Part 4: Barycentric coordinates</h3>
+<p>
+  Barycentric coordinates is a way to do linear interpolation for values in the middle of the trianlge given the values at the vertices. 
+  With the Barycentric coordinates, a linear combination of the coordinates with the values at the vertices gives us the interpolated value at anywhere 
+  inside the triangle. Take the example of color, below is how Barycentric coordinates would work for a triangle with red, blue, and green vertices. 
+</p>
+
+<div align="middle">
+  <table style="width=100%">
+    <tr>
+      <td>
+        <img src="screenshot_2-21_22-59-52.png" align="middle" width="400px"/>
+        <figcaption align="middle">Barycentric coordinates illustration. </figcaption>
+      </td>
+    </tr>
+  </table>
+</div>
+
+<div align="middle">
+  <table style="width=100%">
+    <tr>
+      <td>
+        <img src="screenshot_2-21_22-53-25.png" align="middle" width="400px"/>
+        <figcaption align="middle">Colored rasterization. </figcaption>
+      </td>
+    </tr>
+  </table>
+</div>
 
 
 <h3 align="middle">Part 5: "Pixel sampling" for texture mapping</h3>
+<p>
+  Similar to rasterize colored triangles using Barycentric coordinates, when the vertices are coordinates in the texture image space,
+  we interpolate the coordinates and find the corresponding location in the texture image for every point. The interpolated coordinates
+  will likely not be at a discrete location in the texture image, which means we need to determine how to sample its color from its surroundings.
+  The two methods: nearest and bilinear, are implemented in this project. Nearest is very straightforward, just pick the closest pixel. 
+  Bilinear is to do linear interpolations on the four surrounding pixels. 
+</p>
+
+<div align="middle">
+  <table style="width=100%">
+    <tr>
+      <td>
+        <img src="screenshot_2-21_23-16-21.png" align="middle" width="300px"/>
+        <figcaption align="middle">Nearest.</figcaption>
+      </td>
+      <td>
+        <img src="screenshot_2-21_23-16-30.png" align="middle" width="300px"/>
+        <figcaption align="middle">Bilinear.</figcaption>
+      </td>
+    </tr>
+  </table>
+</div>
+
+<div align="middle">
+  <table style="width=100%">
+    <tr>
+      <td>
+        <img src="screenshot_2-21_23-32-47.png" align="middle" width="400px"/>
+        <figcaption align="middle">Nearest sampling at 1 sample per pixel.</figcaption>
+      </td>
+      <td>
+        <img src="screenshot_2-21_23-32-52.png" align="middle" width="400px"/>
+        <figcaption align="middle">Nearest sampling at 16 sample per pixel.</figcaption>
+      </td>
+    </tr>
+    <br>
+    <tr>
+      <td>
+        <img src="screenshot_2-21_23-32-59.png" align="middle" width="400px"/>
+        <figcaption align="middle">Bilinear sampling at 1 sample per pixel</figcaption>
+      </td>
+      <td>
+        <img src="screenshot_2-21_23-33-3.png" align="middle" width="400px"/>
+        <figcaption align="middle">Bilinear sampling at 16 sample per pixel</figcaption>
+      </td>
+    </tr>
+  </table>
+</div>
+
+<p>
+  The bilinear approach is smoother than the nearest approach when dealing with high frequency textures. Nearest method will create 
+  something like the moire effect, while bilinear is trying to approximate the underlying function of the texture. 
+</p>
 
 
 <h3 align="middle">Part 6: "Level sampling" with mipmaps for texture mapping</h3>
-
-
-
-<h2 align="middle">Section III: Art Competition</h2>
-<p>If you are not participating in the optional art competition, don't worry about this section!</p>
-
-<h3 align="middle">Part 7: Draw something interesting!</h3>
+<p>
+  Same texture image when sampled with different frequencies will likely produce aliasing artifacts. Mipmap are textures blurred in advance, which cost more memory but have the same speed and better antialiasing power. 
+  The example showed below can see that mipmap gives better results at high frequencies. Also bilinear sampling continues to smooth our results. 
+</p>
+<div align="middle">
+  <table style="width=100%">
+    <tr>
+      <td>
+        <img src="screenshot_2-21_23-47-44.png" align="middle" width="400px"/>
+        <figcaption align="middle">L_ZERO and P_NEAREST.</figcaption>
+      </td>
+      <td>
+        <img src="screenshot_2-21_23-47-47.png" align="middle" width="400px"/>
+        <figcaption align="middle">L_ZERO and P_LINEAR.</figcaption>
+      </td>
+    </tr>
+    <br>
+    <tr>
+      <td>
+        <img src="screenshot_2-21_23-47-51.png" align="middle" width="400px"/>
+        <figcaption align="middle">L_NEAREST and P_NEAREST</figcaption>
+      </td>
+      <td>
+        <img src="screenshot_2-21_23-47-58.png" align="middle" width="400px"/>
+        <figcaption align="middle">L_NEAREST and P_LINEAR</figcaption>
+      </td>
+    </tr>
+  </table>
+</div>
 
 </body>
 </html>
